@@ -1,2 +1,92 @@
-here <div><br class="Apple-interchange-newline">// netlify/functions/zapier-webhook.js<br>// Receives POST from Zapier, saves new order to JSONBin.io<br><br>const https = require("https");<br><br>const JSONBIN_KEY     = process.env.JSONBIN_KEY;<br>const JSONBIN_BIN     = process.env.JSONBIN_BIN;<br>const WEBHOOK_SECRET  = process.env.WEBHOOK_SECRET;<br><br>function jsonbinRequest(method, path, body) {<br>  return new Promise((resolve, reject) => {<br>    const options = {<br>      hostname: "api.jsonbin.io",<br>      port: 443,<br>      path,<br>      method,<br>      headers: {<br>        "Content-Type": "application/json",<br>        "X-Master-Key": JSONBIN_KEY,<br>        "X-Bin-Versioning": "false",<br>      },<br>    };<br>    const req = https.request(options, (res) => {<br>      let data = "";<br>      res.on("data", (c) => (data += c));<br>      res.on("end", () => {<br>        try { resolve(JSON.parse(data)); } catch { resolve({ record: [] }); }<br>      });<br>    });<br>    req.on("error", reject);<br>    if (body) req.write(JSON.stringify(body));<br>    req.end();<br>  });<br>}<br><br>function genId() { return "z" + Date.now() + Math.random().toString(36).slice(2, 6); }<br>function todayStr() { return new Date().toISOString().split("T")[0]; }<br><br>function guessPriority(subject = "", body = "") {<br>  const t = (subject + " " + body).toLowerCase();<br>  if (t.match(/urgent|asap|rush|immediate/)) return "High";<br>  if (t.match(/whenever|no rush|low priority/)) return "Low";<br>  return "Medium";<br>}<br><br>exports.handler = async (event) => {<br>  if (event.httpMethod !== "POST") return { statusCode: 405, body: "Method Not Allowed" };<br><br>  if (WEBHOOK_SECRET) {<br>    const tok = event.headers["x-webhook-secret"] || event.headers["X-Webhook-Secret"];<br>    if (tok !== WEBHOOK_SECRET) return { statusCode: 401, body: "Unauthorized" };<br>  }<br><br>  if (!JSONBIN_KEY || !JSONBIN_BIN) return { statusCode: 500, body: "Missing env vars." };<br><br>  let payload;<br>  try { payload = JSON.parse(event.body || "{}"); }<br>  catch { return { statusCode: 400, body: "Invalid JSON" }; }<br><br>  const newOrder = {<br>    id:        genId(),<br>    date:      payload.date ? new Date(payload.date).toISOString().split("T")[0] : todayStr(),<br>    client:    payload.from_name || payload.from_email || payload.client || "Unknown Sender",<br>    subject:   payload.subject   || payload.description || "(No subject)",<br>    type:      payload.type      || "Order",<br>    member:    payload.assigned_to || "VJ",<br>    status:    payload.status    || "Order Confirmed",<br>    priority:  payload.priority  || guessPriority(payload.subject, payload.body_plain),<br>    followup:  payload.followup  || "",<br>    notes:     payload.body_plain || payload.notes || "",<br>    createdAt: Date.now(),<br>    updatedAt: Date.now(),<br>    source:    "zapier",<br>  };<br><br>  let currentOrders = [];<br>  try {<br>    const res = await jsonbinRequest("GET", /v3/b/${JSONBIN_BIN}/latest, null);<br>    currentOrders = Array.isArray(res.record) ? res.record : [];<br>  } catch (e) { console.error("GET failed:", e); }<br><br>  try {<br>    await jsonbinRequest("PUT", /v3/b/${JSONBIN_BIN}, [newOrder, ...currentOrders]);<br>  } catch (e) {<br>    console.error("PUT failed:", e);<br>    return { statusCode: 500, body: "Failed to save order" };<br>  }<br><br>  return {<br>    statusCode: 200,<br>    headers: { "Content-Type": "application/json" },<br>    body: JSON.stringify({ success: true, order: newOrder }),<br>  };<br>};</div>
+// netlify/functions/zapier-webhook.js
+const https = require("https");
 
+const JSONBIN_KEY = process.env.JSONBIN_KEY;
+const JSONBIN_BIN = process.env.JSONBIN_BIN;
+const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
+
+function jsonbinRequest(method, path, body) {
+  return new Promise((resolve, reject) => {
+    const options = {
+      hostname: "api.jsonbin.io",
+      port: 443,
+      path,
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        "X-Master-Key": JSONBIN_KEY,
+        "X-Bin-Versioning": "false",
+      },
+    };
+    const req = https.request(options, (res) => {
+      let data = "";
+      res.on("data", (c) => (data += c));
+      res.on("end", () => {
+        try { resolve(JSON.parse(data)); } catch { resolve({ record: [] }); }
+      });
+    });
+    req.on("error", reject);
+    if (body) req.write(JSON.stringify(body));
+    req.end();
+  });
+}
+
+function genId() { return "z" + Date.now() + Math.random().toString(36).slice(2, 6); }
+function todayStr() { return new Date().toISOString().split("T")[0]; }
+
+function guessPriority(subject = "", body = "") {
+  const t = (subject + " " + body).toLowerCase();
+  if (t.match(/urgent|asap|rush|immediate/)) return "High";
+  if (t.match(/whenever|no rush|low priority/)) return "Low";
+  return "Medium";
+}
+
+exports.handler = async (event) => {
+  if (event.httpMethod !== "POST") return { statusCode: 405, body: "Method Not Allowed" };
+
+  if (WEBHOOK_SECRET) {
+    const tok = event.headers["x-webhook-secret"] || event.headers["X-Webhook-Secret"];
+    if (tok !== WEBHOOK_SECRET) return { statusCode: 401, body: "Unauthorized" };
+  }
+
+  if (!JSONBIN_KEY || !JSONBIN_BIN) return { statusCode: 500, body: "Missing env vars." };
+
+  let payload;
+  try { payload = JSON.parse(event.body || "{}"); }
+  catch { return { statusCode: 400, body: "Invalid JSON" }; }
+
+  const newOrder = {
+    id: genId(),
+    date: payload.date ? new Date(payload.date).toISOString().split("T")[0] : todayStr(),
+    client: payload.from_name || payload.from_email || payload.client || "Unknown Sender",
+    subject: payload.subject || payload.description || "(No subject)",
+    type: payload.type || "Order",
+    member: payload.assigned_to || "VJ",
+    status: payload.status || "Order Confirmed",
+    priority: payload.priority || guessPriority(payload.subject, payload.body_plain),
+    followup: payload.followup || "",
+    notes: payload.body_plain || payload.notes || "",
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    source: "zapier",
+  };
+
+  let currentOrders = [];
+  try {
+    const res = await jsonbinRequest("GET", `/v3/b/${JSONBIN_BIN}/latest`, null);
+    currentOrders = Array.isArray(res.record) ? res.record : [];
+  } catch (e) { console.error("GET failed:", e); }
+
+  try {
+    await jsonbinRequest("PUT", `/v3/b/${JSONBIN_BIN}`, [newOrder, ...currentOrders]);
+  } catch (e) {
+    console.error("PUT failed:", e);
+    return { statusCode: 500, body: "Failed to save order" };
+  }
+
+  return {
+    statusCode: 200,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ success: true, order: newOrder }),
+  };
+};

@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FH Wadsworth — Operations Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+:root{--bg:#0e0e0e;--surface:#161616;--surface2:#1e1e1e;--surface3:#252525;--border:#2a2a2a;--border2:#333;--gold:#c9a84c;--gold2:#e2c06e;--gold-dim:rgba(201,168,76,0.12);--text:#f0ece4;--text2:#9a9690;--text3:#5c5a57;--red:#e05252;--green:#52b788;--blue:#5b8dee;--orange:#e08a3a;--purple:#9b72cf;--teal:#3ab8b8;--r:8px;--r2:12px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex}
+.sidebar{width:240px;min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:100;padding:0 0 24px}
+.sidebar-logo{padding:28px 24px 20px;border-bottom:1px solid var(--border)}
+.sidebar-logo h1{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--gold);letter-spacing:.5px;line-height:1.2}
+.sidebar-logo p{font-size:11px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-top:3px}
+.sidebar-nav{padding:16px 12px;flex:1;overflow-y:auto}
+.nav-section-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);padding:8px 12px 6px;font-weight:500}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--r);cursor:pointer;font-size:13.5px;font-weight:400;color:var(--text2);transition:all .15s;margin-bottom:2px}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--gold-dim);color:var(--gold);font-weight:500}
+.nav-item .icon{font-size:16px;width:20px;text-align:center}
+.nav-badge{margin-left:auto;background:var(--surface3);color:var(--text2);font-size:10px;font-family:'DM Mono',monospace;padding:1px 7px;border-radius:20px}
+.nav-item.active .nav-badge{background:var(--gold-dim);color:var(--gold)}
+.sidebar-team{padding:12px 12px 0;border-top:1px solid var(--border);margin-top:8px}
+.team-filter-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);padding:0 12px 10px;font-weight:500}
+.team-member-btn{display:flex;align-items:center;gap:10px;padding:7px 12px;border-radius:var(--r);cursor:pointer;font-size:13px;color:var(--text2);transition:all .15s;margin-bottom:2px;border:none;background:none;width:100%;text-align:left}
+.team-member-btn:hover{background:var(--surface2);color:var(--text)}
+.team-member-btn.active{background:var(--gold-dim);color:var(--gold)}
+.avatar{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0}
+.main{margin-left:240px;flex:1;min-height:100vh}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;gap:12px}
+.topbar-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:600}
+.topbar-sub{font-size:12px;color:var(--text3);margin-top:2px}
+.topbar-actions{display:flex;gap:10px;align-items:center;flex-shrink:0}
+.sync-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:11.5px;font-weight:500;border:1px solid var(--border2);background:var(--surface2);color:var(--text3);cursor:pointer;transition:all .15s;white-space:nowrap}
+.sync-pill:hover{background:var(--surface3);color:var(--text2)}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--text3);flex-shrink:0}
+.sync-pill.connected .sync-dot{background:var(--green);box-shadow:0 0 6px var(--green)}
+.sync-pill.syncing .sync-dot{background:var(--gold);animation:pulse 1s infinite}
+.sync-pill.error .sync-dot{background:var(--red)}
+.sync-pill.connected{color:var(--green);border-color:rgba(82,183,136,.2)}
+.sync-pill.error{color:var(--red);border-color:rgba(224,82,82,.2)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:var(--r);font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;border:none;transition:all .15s}
+.btn-primary{background:var(--gold);color:#0e0e0e}
+.btn-primary:hover{background:var(--gold2)}
+.btn-ghost{background:var(--surface2);color:var(--text2);border:1px solid var(--border2)}
+.btn-ghost:hover{background:var(--surface3);color:var(--text)}
+.btn-sm{padding:5px 11px;font-size:12px}
+.page{display:none;padding:28px 32px}
+.page.active{display:block}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:28px}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:20px;position:relative;overflow:hidden;transition:border-color .2s}
+.kpi-card:hover{border-color:var(--border2)}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.kpi-card.gold::before{background:var(--gold)}.kpi-card.green::before{background:var(--green)}.kpi-card.blue::before{background:var(--blue)}.kpi-card.orange::before{background:var(--orange)}.kpi-card.red::before{background:var(--red)}.kpi-card.purple::before{background:var(--purple)}
+.kpi-label{font-size:11px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;font-weight:500;margin-bottom:10px}
+.kpi-value{font-size:32px;font-weight:300;font-family:'Playfair Display',serif}
+.kpi-sub{font-size:11px;color:var(--text3);margin-top:4px}
+.section{margin-bottom:32px}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.section-title{font-family:'Playfair Display',serif;font-size:16px;font-weight:600}
+.section-subtitle{font-size:12px;color:var(--text3);margin-top:2px}
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden}
+.table-toolbar{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.search-box{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);padding:7px 12px;flex:1;min-width:200px;max-width:320px}
+.search-box input{background:none;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);width:100%}
+.search-box input::placeholder{color:var(--text3)}
+select.filter-select{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);padding:7px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text2);outline:none;cursor:pointer}
+select.filter-select option{background:var(--surface2)}
+table{width:100%;border-collapse:collapse}
+thead th{padding:11px 16px;text-align:left;font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);font-weight:600;border-bottom:1px solid var(--border);white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--border);transition:background .12s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--surface2)}
+tbody td{padding:12px 16px;font-size:13px;color:var(--text2);vertical-align:middle}
+tbody td.primary{color:var(--text);font-weight:500}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;display:inline-block}
+.badge-artwork-approval{background:rgba(201,168,76,.12);color:var(--gold)}.badge-artwork-approval::before{background:var(--gold)}
+.badge-artwork-design{background:rgba(91,141,238,.12);color:var(--blue)}.badge-artwork-design::before{background:var(--blue)}
+.badge-in-production{background:rgba(155,114,207,.12);color:var(--purple)}.badge-in-production::before{background:var(--purple)}
+.badge-po-sent{background:rgba(58,184,184,.12);color:var(--teal)}.badge-po-sent::before{background:var(--teal)}
+.badge-order-confirmed{background:rgba(82,183,136,.12);color:var(--green)}.badge-order-confirmed::before{background:var(--green)}
+.badge-invoice-sent{background:rgba(224,138,58,.12);color:var(--orange)}.badge-invoice-sent::before{background:var(--orange)}
+.badge-shipped{background:rgba(82,183,136,.2);color:#6ed9a8}.badge-shipped::before{background:#6ed9a8}
+.badge-completed{background:rgba(82,183,136,.08);color:var(--green);border:1px solid rgba(82,183,136,.2)}.badge-completed::before{background:var(--green)}
+.badge-zapier{background:rgba(255,80,0,.12);color:#ff6633;border:1px solid rgba(255,80,0,.15);font-size:10px;padding:2px 7px}
+.badge-zapier::before{display:none}
+.priority-high{color:var(--red);font-weight:600;font-size:11px}
+.priority-medium{color:var(--orange);font-weight:600;font-size:11px}
+.priority-low{color:var(--text3);font-size:11px}
+.perf-bar-wrap{display:flex;align-items:center;gap:10px}
+.perf-bar{flex:1;height:5px;background:var(--surface3);border-radius:3px;overflow:hidden}
+.perf-bar-fill{height:100%;border-radius:3px;background:var(--gold)}
+.perf-pct{font-size:11px;color:var(--text3);width:34px;text-align:right;font-family:'DM Mono',monospace}
+.status-flow{display:flex;overflow-x:auto;margin-bottom:24px;border-radius:var(--r2);border:1px solid var(--border);overflow:hidden}
+.status-step{flex:1;min-width:110px;background:var(--surface);border-right:1px solid var(--border);padding:14px 16px}
+.status-step:last-child{border-right:none}
+.status-step-count{font-size:24px;font-family:'Playfair Display',serif}
+.status-step-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-top:4px;line-height:1.3}
+.status-step-bar{height:2px;background:var(--surface3);margin-top:10px;border-radius:1px;overflow:hidden}
+.status-step-bar-fill{height:100%;border-radius:1px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:auto}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:640px;max-width:95vw;max-height:90vh;overflow-y:auto;transform:translateY(20px);transition:transform .2s}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-header{padding:24px 28px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-header h2{font-family:'Playfair Display',serif;font-size:18px;font-weight:600}
+.modal-close{background:var(--surface2);border:1px solid var(--border2);border-radius:6px;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:16px;transition:all .15s}
+.modal-close:hover{background:var(--surface3);color:var(--text)}
+.modal-body{padding:24px 28px}
+.modal-footer{padding:16px 28px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group.full{grid-column:1/-1}
+label{font-size:11.5px;color:var(--text3);letter-spacing:.5px;font-weight:500}
+input[type="text"],input[type="date"],textarea,select.form-select{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;transition:border-color .15s;width:100%}
+input:focus,textarea:focus,select.form-select:focus{border-color:var(--gold)}
+input::placeholder,textarea::placeholder{color:var(--text3)}
+textarea{resize:vertical;min-height:80px}
+select.form-select option{background:var(--surface2)}
+.settings-section{margin-bottom:28px}
+.settings-section-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.settings-row{display:flex;align-items:flex-start;gap:16px;margin-bottom:14px}
+.settings-row label{font-size:12px;color:var(--text2);min-width:130px;padding-top:10px}
+.settings-row .input-wrap{flex:1}
+.settings-hint{font-size:11px;color:var(--text3);margin-top:5px;line-height:1.4}
+.webhook-url-box{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);padding:10px 14px;font-family:'DM Mono',monospace;font-size:12px;color:var(--gold);word-break:break-all;line-height:1.5}
+.info-box{background:var(--gold-dim);border:1px solid rgba(201,168,76,.2);border-radius:var(--r);padding:12px 16px;font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:20px}
+.info-box strong{color:var(--gold)}
+.step-list{counter-reset:steps;list-style:none}
+.step-list li{counter-increment:steps;padding:9px 0 9px 34px;position:relative;font-size:13px;color:var(--text2);border-bottom:1px solid var(--border)}
+.step-list li:last-child{border-bottom:none}
+.step-list li::before{content:counter(steps);position:absolute;left:0;width:22px;height:22px;border-radius:50%;background:var(--surface3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--gold);font-weight:600;top:9px}
+.step-list li code{background:var(--surface3);padding:1px 6px;border-radius:4px;font-family:'DM Mono',monospace;font-size:11px;color:var(--text)}
+.env-table{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);overflow:hidden;margin-bottom:12px}
+.env-table th{padding:9px 14px;font-size:10px;color:var(--text3);border-bottom:1px solid var(--border);text-align:left}
+.env-table td{padding:10px 14px;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border)}
+.env-table tr:last-child td{border-bottom:none}
+.env-table td.mono{font-family:'DM Mono',monospace;font-size:11px;color:var(--gold)}
+.field-map-table{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);overflow:hidden;margin-top:12px}
+.field-map-table th{padding:9px 14px;font-size:10px;color:var(--text3);border-bottom:1px solid var(--border);text-align:left}
+.field-map-table td{padding:9px 14px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text2)}
+.field-map-table tr:last-child td{border-bottom:none}
+.field-map-table td.mono{font-family:'DM Mono',monospace;font-size:11px;color:var(--gold)}
+.action-btns{display:flex;gap:6px}
+.action-btn{padding:5px 9px;border-radius:6px;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text3);font-size:12px;transition:all .15s}
+.action-btn:hover{background:var(--surface3);color:var(--text)}
+.action-btn.danger:hover{background:rgba(224,82,82,.12);color:var(--red);border-color:rgba(224,82,82,.2)}
+.empty-state{text-align:center;padding:60px 20px;color:var(--text3)}
+.empty-state .empty-icon{font-size:36px;margin-bottom:12px;opacity:.4}
+.empty-state p{font-size:14px}
+.date-overdue{color:var(--red)!important;font-weight:500}
+.date-soon{color:var(--orange)!important;font-weight:500}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border2);border-left:3px solid var(--green);border-radius:var(--r);padding:12px 18px;font-size:13px;color:var(--text);z-index:500;transform:translateY(80px);opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);max-width:320px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.error{border-left-color:var(--red)}
+.toast.info{border-left-color:var(--blue)}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo"><h1>FH Wadsworth</h1><p>Operations Hub</p></div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Overview</div>
+    <div class="nav-item active" onclick="goPage('dashboard',this)"><span class="icon">◈</span> Dashboard</div>
+    <div class="nav-section-label" style="margin-top:12px">Tracking</div>
+    <div class="nav-item" onclick="goPage('orders',this)"><span class="icon">📋</span> Orders / Leads <span class="nav-badge" id="badge-orders">0</span></div>
+    <div class="nav-item" onclick="goPage('artworks',this)"><span class="icon">🎨</span> Artworks <span class="nav-badge" id="badge-artworks">0</span></div>
+    <div class="nav-item" onclick="goPage('productions',this)"><span class="icon">⚙️</span> Productions <span class="nav-badge" id="badge-productions">0</span></div>
+    <div class="nav-section-label" style="margin-top:12px">People</div>
+    <div class="nav-item" onclick="goPage('team',this)"><span class="icon">👥</span> Team Performance</div>
+    <div class="nav-section-label" style="margin-top:12px">Integrations</div>
+    <div class="nav-item" onclick="goPage('settings',this)"><span class="icon">⚡</span> Zapier Setup</div>
+  </nav>
+  <div class="sidebar-team">
+    <div class="team-filter-label">Filter by member</div>
+    <button class="team-member-btn active" onclick="filterTeam('all',this)"><div class="avatar" style="background:#2a2a2a;color:#9a9690">All</div><span>All Members</span></button>
+    <button class="team-member-btn" onclick="filterTeam('VJ',this)"><div class="avatar" style="background:rgba(201,168,76,0.18);color:var(--gold)">VJ</div><span>VJ</span></button>
+    <button class="team-member-btn" onclick="filterTeam('Angelo',this)"><div class="avatar" style="background:rgba(91,141,238,0.18);color:var(--blue)">AN</div><span>Angelo</span></button>
+    <button class="team-member-btn" onclick="filterTeam('Jamie',this)"><div class="avatar" style="background:rgba(82,183,136,0.18);color:var(--green)">JM</div><span>Jamie</span></button>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div><div class="topbar-title" id="page-title">Dashboard</div><div class="topbar-sub" id="page-sub">Executive overview — FH Wadsworth Bags</div></div>
+    <div class="topbar-actions">
+      <div class="sync-pill" id="sync-pill" onclick="manualSync()" title="Click to sync now"><span class="sync-dot"></span><span id="sync-label">Not connected</span></div>
+      <button class="btn btn-ghost btn-sm" onclick="exportCSV()">⬇ Export</button>
+      <button class="btn btn-primary" onclick="openAddModal()">+ New Order</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="kpi-grid" id="kpi-grid"></div>
+    <div class="section">
+      <div class="section-header"><div><div class="section-title">Pipeline Overview</div><div class="section-subtitle">Orders across all workflow stages</div></div></div>
+      <div class="status-flow" id="status-flow"></div>
+    </div>
+    <div class="section">
+      <div class="section-header"><div><div class="section-title">Follow-Up Required</div><div class="section-subtitle">Orders needing attention</div></div></div>
+      <div class="table-wrap"><table><thead><tr><th>Date</th><th>Client</th><th>Subject</th><th>Assigned To</th><th>Status</th><th>Follow-Up</th><th>Source</th></tr></thead><tbody id="followup-table"></tbody></table></div>
+    </div>
+    <div class="section">
+      <div class="section-header"><div><div class="section-title">Team Snapshot</div></div></div>
+      <div class="table-wrap"><table><thead><tr><th>Member</th><th>Total</th><th>Pending</th><th>Completed</th><th>Follow-Up</th><th>Rate</th></tr></thead><tbody id="dash-team-table"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- ORDERS -->
+  <div class="page" id="page-orders">
+    <div class="table-wrap">
+      <div class="table-toolbar">
+        <div class="search-box"><span>🔍</span><input type="text" id="orders-search" placeholder="Search orders…" oninput="renderOrdersTable()"/></div>
+        <select class="filter-select" id="orders-status-filter" onchange="renderOrdersTable()"><option value="">All Statuses</option></select>
+        <select class="filter-select" id="orders-member-filter" onchange="renderOrdersTable()"><option value="">All Members</option><option>VJ</option><option>Angelo</option><option>Jamie</option></select>
+        <select class="filter-select" id="orders-priority-filter" onchange="renderOrdersTable()"><option value="">All Priorities</option><option>High</option><option>Medium</option><option>Low</option></select>
+      </div>
+      <table><thead><tr><th>Date</th><th>Client</th><th>Subject</th><th>Type</th><th>Assigned To</th><th>Status</th><th>Priority</th><th>Follow-Up</th><th>Source</th><th>Actions</th></tr></thead><tbody id="orders-table"></tbody></table>
+    </div>
+  </div>
+
+  <!-- ARTWORKS -->
+  <div class="page" id="page-artworks">
+    <div class="table-wrap">
+      <div class="table-toolbar">
+        <div class="search-box"><span>🔍</span><input type="text" id="art-search" placeholder="Search artworks…" oninput="renderArtworksTable()"/></div>
+        <select class="filter-select" id="art-status-filter" onchange="renderArtworksTable()"><option value="">All Artwork Statuses</option><option value="Artwork for Approval">For Approval</option><option value="Artwork in Design">In Design</option></select>
+        <select class="filter-select" id="art-member-filter" onchange="renderArtworksTable()"><option value="">All Members</option><option>VJ</option><option>Angelo</option><option>Jamie</option></select>
+      </div>
+      <table><thead><tr><th>Date</th><th>Client</th><th>Description</th><th>Assigned To</th><th>Status</th><th>Notes</th><th>Follow-Up</th><th>Source</th><th>Actions</th></tr></thead><tbody id="artworks-table"></tbody></table>
+    </div>
+  </div>
+
+  <!-- PRODUCTIONS -->
+  <div class="page" id="page-productions">
+    <div class="table-wrap">
+      <div class="table-toolbar">
+        <div class="search-box"><span>🔍</span><input type="text" id="prod-search" placeholder="Search productions…" oninput="renderProductionsTable()"/></div>
+        <select class="filter-select" id="prod-status-filter" onchange="renderProductionsTable()"><option value="">All Production Statuses</option><option>Order Confirmed</option><option>PO Sent</option><option>In Production</option><option>Shipped</option><option>Invoice Sent</option><option>Completed</option></select>
+        <select class="filter-select" id="prod-member-filter" onchange="renderProductionsTable()"><option value="">All Members</option><option>VJ</option><option>Angelo</option><option>Jamie</option></select>
+      </div>
+      <table><thead><tr><th>Date</th><th>Client</th><th>Description</th><th>Assigned To</th><th>Status</th><th>Notes</th><th>Follow-Up</th><th>Source</th><th>Actions</th></tr></thead><tbody id="productions-table"></tbody></table>
+    </div>
+  </div>
+
+  <!-- TEAM -->
+  <div class="page" id="page-team">
+    <div class="kpi-grid" id="team-kpi"></div>
+    <div class="section">
+      <div class="section-header"><div><div class="section-title">Team Performance</div><div class="section-subtitle">Workload and progress per member</div></div></div>
+      <div class="table-wrap"><table><thead><tr><th>Member</th><th>Total</th><th>Pending</th><th>Artworks</th><th>Productions</th><th>Completed</th><th>Follow-Up</th><th>Rate</th></tr></thead><tbody id="team-table"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- ZAPIER SETTINGS -->
+  <div class="page" id="page-settings">
+    <div style="max-width:720px">
+      <div class="info-box">⚡ <strong>How it works:</strong> Zapier watches your Gmail/Outlook inbox → sends email data to your webhook URL → a Netlify serverless function saves it to JSONBin → your dashboard auto-syncs and the order appears instantly.</div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Step 1 — JSONBin.io (Free Cloud Storage)</div>
+        <p style="font-size:13px;color:var(--text3);margin-bottom:16px;line-height:1.6">Orders created by Zapier are stored here so they appear on all devices in real time. Free at <strong style="color:var(--text2)">jsonbin.io</strong>.</p>
+        <div class="settings-row">
+          <label>Master Key</label>
+          <div class="input-wrap">
+            <input type="text" id="s-jsonbin-key" class="form-select" placeholder="$2a$10$..." oninput="settingsChanged()"/>
+            <div class="settings-hint">jsonbin.io → Account → API Keys → Master Key</div>
+          </div>
+        </div>
+        <div class="settings-row">
+          <label>Bin ID</label>
+          <div class="input-wrap">
+            <div style="display:flex;gap:8px"><input type="text" id="s-jsonbin-bin" class="form-select" placeholder="64abc123..." oninput="settingsChanged()"/><button class="btn btn-ghost btn-sm" onclick="createBin()">Auto-create</button></div>
+            <div class="settings-hint">Click Auto-create to generate a new bin, or paste an existing ID.</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:4px">
+          <button class="btn btn-primary btn-sm" onclick="saveSettings()">Save &amp; Test Connection</button>
+          <button class="btn btn-ghost btn-sm" onclick="syncNow()">↻ Sync Now</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Step 2 — Netlify Environment Variables</div>
+        <p style="font-size:13px;color:var(--text3);margin-bottom:14px;line-height:1.6">In Netlify → Site Configuration → Environment Variables, add:</p>
+        <table class="env-table"><thead><tr><th>Variable</th><th>Value</th></tr></thead><tbody>
+          <tr><td class="mono">JSONBIN_KEY</td><td>Your JSONBin Master Key</td></tr>
+          <tr><td class="mono">JSONBIN_BIN</td><td>Your JSONBin Bin ID</td></tr>
+          <tr><td class="mono">WEBHOOK_SECRET</td><td>Any secret password (optional, recommended)</td></tr>
+        </tbody></table>
+        <p style="font-size:11px;color:var(--text3);margin-top:8px">After adding these, trigger a redeploy in Netlify so the function picks them up.</p>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Step 3 — Your Webhook URL</div>
+        <p style="font-size:13px;color:var(--text3);margin-bottom:12px">Enter your Netlify domain to generate the URL to paste into Zapier:</p>
+        <div style="display:flex;gap:8px;margin-bottom:10px"><input type="text" id="s-netlify-domain" class="form-select" placeholder="your-site.netlify.app" oninput="updateWebhookUrl()" style="max-width:300px"/><button class="btn btn-ghost btn-sm" onclick="copyWebhookUrl()">📋 Copy</button></div>
+        <div class="webhook-url-box" id="webhook-url-display">https://your-site.netlify.app/.netlify/functions/zapier-webhook</div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Step 4 — Build the Zap</div>
+        <ol class="step-list">
+          <li>Go to <strong>zapier.com</strong> → <strong>Create Zap</strong></li>
+          <li><strong>Trigger:</strong> Gmail (or Outlook) → Event: <code>New Email</code>. Connect your inbox and add filters if needed (e.g. subject contains "order" or "bag")</li>
+          <li><strong>Action:</strong> App: <code>Webhooks by Zapier</code> → Event: <code>POST</code></li>
+          <li>Paste your Webhook URL from Step 3. Set Payload Type to <code>JSON</code></li>
+          <li>Map the data fields below, then publish your Zap</li>
+        </ol>
+        <table class="field-map-table"><thead><tr><th>Field Name (in Zapier)</th><th>Map to Gmail field</th><th>Notes</th></tr></thead><tbody>
+          <tr><td class="mono">from_name</td><td>From Name</td><td style="color:var(--text3);font-size:11px">Becomes the Client name</td></tr>
+          <tr><td class="mono">from_email</td><td>From Email</td><td style="color:var(--text3);font-size:11px">Fallback if no name</td></tr>
+          <tr><td class="mono">subject</td><td>Subject</td><td style="color:var(--text3);font-size:11px">Order description</td></tr>
+          <tr><td class="mono">body_plain</td><td>Body Plain</td><td style="color:var(--text3);font-size:11px">Saved as Notes</td></tr>
+          <tr><td class="mono">date</td><td>Date</td><td style="color:var(--text3);font-size:11px">Date email was received</td></tr>
+          <tr><td class="mono">assigned_to</td><td>Type manually: VJ / Angelo / Jamie</td><td style="color:var(--text3);font-size:11px">Or use Zapier Filter to route by email address</td></tr>
+        </tbody></table>
+        <p style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.5">If you set a <code style="background:var(--surface3);padding:1px 6px;border-radius:4px">WEBHOOK_SECRET</code>, add a Zapier header: <code style="background:var(--surface3);padding:1px 6px;border-radius:4px">X-Webhook-Secret</code> = your secret.</p>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Step 5 — Auto-Sync Interval</div>
+        <div class="settings-row">
+          <label>Sync every</label>
+          <div class="input-wrap">
+            <select class="form-select" id="s-sync-interval" onchange="settingsChanged()" style="max-width:180px"><option value="30">30 seconds</option><option value="60" selected>1 minute</option><option value="120">2 minutes</option><option value="300">5 minutes</option><option value="0">Manual only</option></select>
+            <div class="settings-hint">How often the dashboard polls JSONBin for new Zapier orders.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ORDER MODAL -->
+<div class="modal-overlay" id="order-modal" onclick="closeModalOnOverlay(event)">
+  <div class="modal">
+    <div class="modal-header"><h2 id="modal-title">New Order / Lead</h2><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>Date Received</label><input type="date" id="f-date"/></div>
+        <div class="form-group"><label>Client / Sender Name</label><input type="text" id="f-client" placeholder="e.g. Acme Corp"/></div>
+        <div class="form-group full"><label>Subject / Description</label><input type="text" id="f-subject" placeholder="Brief order description"/></div>
+        <div class="form-group"><label>Order Type</label><select class="form-select" id="f-type"><option value="Order">Order / Lead</option><option value="Artwork">Artwork</option><option value="Production">Production</option></select></div>
+        <div class="form-group"><label>Assigned Team Member</label><select class="form-select" id="f-member"><option>VJ</option><option>Angelo</option><option>Jamie</option></select></div>
+        <div class="form-group"><label>Status</label><select class="form-select" id="f-status"><option>Order Confirmed</option><option>Artwork in Design</option><option>Artwork for Approval</option><option>PO Sent</option><option>In Production</option><option>Invoice Sent</option><option>Shipped</option><option>Completed</option></select></div>
+        <div class="form-group"><label>Priority</label><select class="form-select" id="f-priority"><option>Medium</option><option>High</option><option>Low</option></select></div>
+        <div class="form-group"><label>Follow-Up Date</label><input type="date" id="f-followup"/></div>
+        <div class="form-group full"><label>Notes</label><textarea id="f-notes" placeholder="Any additional notes…"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveOrder()">Save Order</button></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY='fhw_orders_v3';const SETTINGS_KEY='fhw_settings_v2';
+const ALL_STATUSES=['Order Confirmed','Artwork in Design','Artwork for Approval','PO Sent','In Production','Invoice Sent','Shipped','Completed'];
+const ARTWORK_STATUSES=['Artwork in Design','Artwork for Approval'];
+const PRODUCTION_STATUSES=['Order Confirmed','PO Sent','In Production','Invoice Sent','Shipped','Completed'];
+const TEAM_MEMBERS=['VJ','Angelo','Jamie'];
+const MEMBER_COLORS={VJ:{bg:'rgba(201,168,76,0.18)',color:'var(--gold)'},Angelo:{bg:'rgba(91,141,238,0.18)',color:'var(--blue)'},Jamie:{bg:'rgba(82,183,136,0.18)',color:'var(--green)'}};
+let orders=[],editingId=null,activeTeamFilter='all',settings={jsonbinKey:'',jsonbinBin:'',netlifyDomain:'',syncInterval:60},syncTimer=null,lastSyncTime=null;
+
+function loadLocal(){try{orders=JSON.parse(localStorage.getItem(STORAGE_KEY))||[];}catch{orders=[];}try{const s=JSON.parse(localStorage.getItem(SETTINGS_KEY));if(s)settings={...settings,...s};}catch{}}
+function saveLocal(){localStorage.setItem(STORAGE_KEY,JSON.stringify(orders));}
+function saveSettings(){settings.jsonbinKey=document.getElementById('s-jsonbin-key').value.trim();settings.jsonbinBin=document.getElementById('s-jsonbin-bin').value.trim();settings.netlifyDomain=document.getElementById('s-netlify-domain').value.trim();settings.syncInterval=parseInt(document.getElementById('s-sync-interval').value);localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));showToast('Settings saved!');updateWebhookUrl();startSyncTimer();syncNow();}
+function settingsChanged(){updateWebhookUrl();}
+function loadSettingsUI(){document.getElementById('s-jsonbin-key').value=settings.jsonbinKey||'';document.getElementById('s-jsonbin-bin').value=settings.jsonbinBin||'';document.getElementById('s-netlify-domain').value=settings.netlifyDomain||'';document.getElementById('s-sync-interval').value=settings.syncInterval||60;updateWebhookUrl();updateSyncPill();}
+function updateWebhookUrl(){const d=document.getElementById('s-netlify-domain')?.value.trim()||settings.netlifyDomain||'your-site.netlify.app';const el=document.getElementById('webhook-url-display');if(el)el.textContent=`https://${d}/.netlify/functions/zapier-webhook`;}
+function copyWebhookUrl(){const url=document.getElementById('webhook-url-display').textContent;navigator.clipboard.writeText(url).then(()=>showToast('Webhook URL copied!',false,'info'));}
+
+async function createBin(){const key=document.getElementById('s-jsonbin-key').value.trim()||settings.jsonbinKey;if(!key){showToast('Enter your JSONBin Master Key first.',true);return;}setSyncState('syncing','Creating bin…');try{const res=await fetch('https://api.jsonbin.io/v3/b',{method:'POST',headers:{'Content-Type':'application/json','X-Master-Key':key,'X-Bin-Name':'FHW-Orders'},body:JSON.stringify([])});const data=await res.json();if(data.metadata?.id){document.getElementById('s-jsonbin-bin').value=data.metadata.id;showToast('Bin created! Save settings to activate.');setSyncState('connected','Bin created');}else throw new Error();}catch{setSyncState('error','Failed');showToast('Bin creation failed. Check your Master Key.',true);}}
+
+async function syncNow(){if(!settings.jsonbinKey||!settings.jsonbinBin){showToast('Configure JSONBin in Settings first.',true);return;}setSyncState('syncing','Syncing…');try{const res=await fetch(`https://api.jsonbin.io/v3/b/${settings.jsonbinBin}/latest`,{headers:{'X-Master-Key':settings.jsonbinKey}});if(!res.ok)throw new Error(''+res.status);const data=await res.json();const cloud=Array.isArray(data.record)?data.record:[];const cloudIds=new Set(cloud.map(o=>o.id));const localOnly=orders.filter(o=>!cloudIds.has(o.id));if(localOnly.length>0){const merged=[...cloud,...localOnly];await pushToCloud(merged);orders=merged;}else{orders=cloud;}saveLocal();lastSyncTime=new Date();setSyncState('connected',`Synced ${fmtTime(lastSyncTime)}`);renderAll();showToast(`Synced — ${orders.length} orders`,false,'info');}catch(e){setSyncState('error','Sync failed');showToast('Sync failed. Check credentials.',true);}}
+async function pushToCloud(data){const res=await fetch(`https://api.jsonbin.io/v3/b/${settings.jsonbinBin}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':settings.jsonbinKey,'X-Bin-Versioning':'false'},body:JSON.stringify(data)});if(!res.ok)throw new Error();}
+async function pushOrdersToCloud(){if(!settings.jsonbinKey||!settings.jsonbinBin)return;try{await pushToCloud(orders);}catch{}}
+function manualSync(){if(!settings.jsonbinKey||!settings.jsonbinBin){goPage('settings',document.querySelector('[onclick*="settings"]'));return;}syncNow();}
+function startSyncTimer(){clearInterval(syncTimer);if(settings.syncInterval>0)syncTimer=setInterval(syncNow,settings.syncInterval*1000);}
+function setSyncState(state,label){document.getElementById('sync-pill').className='sync-pill '+state;document.getElementById('sync-label').textContent=label;}
+function fmtTime(d){return d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});}
+function updateSyncPill(){if(!settings.jsonbinKey||!settings.jsonbinBin)setSyncState('','Not connected');else setSyncState('connected',lastSyncTime?`Synced ${fmtTime(lastSyncTime)}`:'Click to sync');}
+
+const PAGE_META={dashboard:{title:'Dashboard',sub:'Executive overview — FH Wadsworth Bags'},orders:{title:'Orders / Leads',sub:'All incoming orders and leads'},artworks:{title:'Artworks',sub:'Design & approval tracking'},productions:{title:'Productions',sub:'Manufacturing & fulfillment pipeline'},team:{title:'Team Performance',sub:'Workload and progress per member'},settings:{title:'⚡ Zapier Integration',sub:'Auto-create orders from email'}};
+function goPage(id,el){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+id).classList.add('active');document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));if(el)el.classList.add('active');document.getElementById('page-title').textContent=PAGE_META[id].title;document.getElementById('page-sub').textContent=PAGE_META[id].sub;if(id==='settings')loadSettingsUI();renderAll();}
+function filterTeam(member,btn){activeTeamFilter=member;document.querySelectorAll('.team-member-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');['orders-member-filter','art-member-filter','prod-member-filter'].forEach(id=>{document.getElementById(id).value=member==='all'?'':member;});renderAll();}
+
+function statusBadge(s){const map={'Artwork for Approval':'badge-artwork-approval','Artwork in Design':'badge-artwork-design','In Production':'badge-in-production','PO Sent':'badge-po-sent','Order Confirmed':'badge-order-confirmed','Invoice Sent':'badge-invoice-sent','Shipped':'badge-shipped','Completed':'badge-completed'};return`<span class="badge ${map[s]||''}">${s}</span>`;}
+function sourceBadge(o){return o.source==='zapier'?'<span class="badge badge-zapier">⚡ Zapier</span>':'<span style="color:var(--text3);font-size:11px">Manual</span>';}
+function memberAvatar(m){if(!m||!MEMBER_COLORS[m])return`<span style="color:var(--text3)">${m||'—'}</span>`;const c=MEMBER_COLORS[m];return`<span style="display:inline-flex;align-items:center;gap:7px"><span style="width:22px;height:22px;border-radius:50%;background:${c.bg};color:${c.color};display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:600">${m.substring(0,2).toUpperCase()}</span>${m}</span>`;}
+function priorityBadge(p){if(p==='High')return'<span class="priority-high">⬆ High</span>';if(p==='Low')return'<span class="priority-low">⬇ Low</span>';return'<span class="priority-medium">→ Med</span>';}
+function fmtDate(d){if(!d)return'—';return new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
+function dateClass(d){if(!d)return'';const today=new Date();today.setHours(0,0,0,0);const dt=new Date(d+'T00:00:00');const diff=(dt-today)/86400000;if(diff<0)return'date-overdue';if(diff<=3)return'date-soon';return'';}
+function needsFollowUp(o){if(o.status==='Completed')return false;if(!o.followup)return false;const today=new Date();today.setHours(0,0,0,0);return new Date(o.followup+'T00:00:00')<=new Date(today.getTime()+3*86400000);}
+function applyMemberFilter(list){return activeTeamFilter==='all'?list:list.filter(o=>o.member===activeTeamFilter);}
+
+function renderDashboard(){const list=applyMemberFilter(orders);const total=list.length,completed=list.filter(o=>o.status==='Completed').length,artworks=list.filter(o=>ARTWORK_STATUSES.includes(o.status)||o.type==='Artwork').length,prods=list.filter(o=>PRODUCTION_STATUSES.includes(o.status)||o.type==='Production').length,followUp=list.filter(o=>needsFollowUp(o)).length,zapier=list.filter(o=>o.source==='zapier').length;
+document.getElementById('kpi-grid').innerHTML=`<div class="kpi-card gold"><div class="kpi-label">Total Orders</div><div class="kpi-value">${total}</div></div><div class="kpi-card green"><div class="kpi-label">Completed</div><div class="kpi-value">${completed}</div><div class="kpi-sub">${total?Math.round(completed/total*100):0}% rate</div></div><div class="kpi-card blue"><div class="kpi-label">Artworks</div><div class="kpi-value">${artworks}</div></div><div class="kpi-card purple"><div class="kpi-label">In Production</div><div class="kpi-value">${prods}</div></div><div class="kpi-card red"><div class="kpi-label">Follow-Up Needed</div><div class="kpi-value">${followUp}</div></div><div class="kpi-card orange"><div class="kpi-label">⚡ From Zapier</div><div class="kpi-value">${zapier}</div><div class="kpi-sub">Auto-created from email</div></div>`;
+const sc={};ALL_STATUSES.forEach(s=>sc[s]=list.filter(o=>o.status===s).length);const mc=Math.max(...Object.values(sc),1);const cols=['var(--green)','var(--blue)','var(--gold)','var(--teal)','var(--purple)','var(--orange)','#6ed9a8','var(--green)'];
+document.getElementById('status-flow').innerHTML=ALL_STATUSES.map((s,i)=>`<div class="status-step"><div class="status-step-count">${sc[s]}</div><div class="status-step-label">${s}</div><div class="status-step-bar"><div class="status-step-bar-fill" style="width:${sc[s]/mc*100}%;background:${cols[i]}"></div></div></div>`).join('');
+const fu=list.filter(o=>needsFollowUp(o)&&o.status!=='Completed').slice(0,8);
+document.getElementById('followup-table').innerHTML=fu.length?fu.map(o=>`<tr><td>${fmtDate(o.date)}</td><td class="primary">${o.client||'—'}</td><td>${o.subject||'—'}</td><td>${memberAvatar(o.member)}</td><td>${statusBadge(o.status)}</td><td class="${dateClass(o.followup)}">${fmtDate(o.followup)}</td><td>${sourceBadge(o)}</td></tr>`).join(''):`<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">✅</div><p>No follow-ups needed right now</p></div></td></tr>`;
+renderTeamTable('dash-team-table',list,false);renderBadges();}
+
+function renderOrdersTable(){const search=(document.getElementById('orders-search')?.value||'').toLowerCase();const sf=document.getElementById('orders-status-filter')?.value||'';const mf=document.getElementById('orders-member-filter')?.value||'';const pf=document.getElementById('orders-priority-filter')?.value||'';const list=orders.filter(o=>{if(mf&&o.member!==mf)return false;if(sf&&o.status!==sf)return false;if(pf&&o.priority!==pf)return false;if(search&&!`${o.client} ${o.subject} ${o.notes}`.toLowerCase().includes(search))return false;return true;});
+const el=document.getElementById('orders-status-filter');if(el.options.length<=1)ALL_STATUSES.forEach(s=>el.add(new Option(s,s)));
+document.getElementById('orders-table').innerHTML=list.length?list.map(o=>`<tr><td>${fmtDate(o.date)}</td><td class="primary">${o.client||'—'}</td><td>${o.subject||'—'}</td><td><span class="badge" style="background:var(--surface3);color:var(--text2)">${o.type||'Order'}</span></td><td>${memberAvatar(o.member)}</td><td>${statusBadge(o.status)}</td><td>${priorityBadge(o.priority)}</td><td class="${dateClass(o.followup)}">${fmtDate(o.followup)}</td><td>${sourceBadge(o)}</td><td><div class="action-btns"><button class="action-btn" onclick="editOrder('${o.id}')">✏️</button><button class="action-btn danger" onclick="deleteOrder('${o.id}')">🗑</button></div></td></tr>`).join(''):`<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">📋</div><p>No orders found.</p></div></td></tr>`;}
+
+function renderArtworksTable(){const search=(document.getElementById('art-search')?.value||'').toLowerCase();const sf=document.getElementById('art-status-filter')?.value||'';const mf=document.getElementById('art-member-filter')?.value||'';const list=orders.filter(o=>{if(!ARTWORK_STATUSES.includes(o.status)&&o.type!=='Artwork')return false;if(mf&&o.member!==mf)return false;if(sf&&o.status!==sf)return false;if(search&&!`${o.client} ${o.subject}`.toLowerCase().includes(search))return false;return true;});
+document.getElementById('artworks-table').innerHTML=list.length?list.map(o=>`<tr><td>${fmtDate(o.date)}</td><td class="primary">${o.client||'—'}</td><td>${o.subject||'—'}</td><td>${memberAvatar(o.member)}</td><td>${statusBadge(o.status)}</td><td style="max-width:180px;color:var(--text3);font-size:12px">${o.notes||'—'}</td><td class="${dateClass(o.followup)}">${fmtDate(o.followup)}</td><td>${sourceBadge(o)}</td><td><div class="action-btns"><button class="action-btn" onclick="editOrder('${o.id}')">✏️</button><button class="action-btn danger" onclick="deleteOrder('${o.id}')">🗑</button></div></td></tr>`).join(''):`<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">🎨</div><p>No artworks in this stage.</p></div></td></tr>`;}
+
+function renderProductionsTable(){const search=(document.getElementById('prod-search')?.value||'').toLowerCase();const sf=document.getElementById('prod-status-filter')?.value||'';const mf=document.getElementById('prod-member-filter')?.value||'';const list=orders.filter(o=>{if(!PRODUCTION_STATUSES.includes(o.status)&&o.type!=='Production')return false;if(mf&&o.member!==mf)return false;if(sf&&o.status!==sf)return false;if(search&&!`${o.client} ${o.subject}`.toLowerCase().includes(search))return false;return true;});
+document.getElementById('productions-table').innerHTML=list.length?list.map(o=>`<tr><td>${fmtDate(o.date)}</td><td class="primary">${o.client||'—'}</td><td>${o.subject||'—'}</td><td>${memberAvatar(o.member)}</td><td>${statusBadge(o.status)}</td><td style="max-width:180px;color:var(--text3);font-size:12px">${o.notes||'—'}</td><td class="${dateClass(o.followup)}">${fmtDate(o.followup)}</td><td>${sourceBadge(o)}</td><td><div class="action-btns"><button class="action-btn" onclick="editOrder('${o.id}')">✏️</button><button class="action-btn danger" onclick="deleteOrder('${o.id}')">🗑</button></div></td></tr>`).join(''):`<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">⚙️</div><p>No productions in this stage.</p></div></td></tr>`;}
+
+function renderTeamTable(tbodyId,list,extended){const tbody=document.getElementById(tbodyId);if(!tbody)return;tbody.innerHTML=TEAM_MEMBERS.map(m=>{const mo=list.filter(o=>o.member===m);const total=mo.length,completed=mo.filter(o=>o.status==='Completed').length,pending=total-completed,fu=mo.filter(o=>needsFollowUp(o)).length,pct=total?Math.round(completed/total*100):0;if(extended){const art=mo.filter(o=>ARTWORK_STATUSES.includes(o.status)||o.type==='Artwork').length,prod=mo.filter(o=>PRODUCTION_STATUSES.includes(o.status)||o.type==='Production').length;return`<tr><td>${memberAvatar(m)}</td><td class="primary">${total}</td><td>${pending}</td><td>${art}</td><td>${prod}</td><td>${completed}</td><td>${fu>0?`<span style="color:var(--red);font-weight:600">${fu}</span>`:'—'}</td><td><div class="perf-bar-wrap"><div class="perf-bar"><div class="perf-bar-fill" style="width:${pct}%"></div></div><span class="perf-pct">${pct}%</span></div></td></tr>`;}return`<tr><td>${memberAvatar(m)}</td><td class="primary">${total}</td><td>${pending}</td><td>${completed}</td><td>${fu>0?`<span style="color:var(--red)">${fu}</span>`:fu}</td><td><div class="perf-bar-wrap"><div class="perf-bar"><div class="perf-bar-fill" style="width:${pct}%"></div></div><span class="perf-pct">${pct}%</span></div></td></tr>`;}).join('');}
+
+function renderTeamPage(){const list=applyMemberFilter(orders);document.getElementById('team-kpi').innerHTML=TEAM_MEMBERS.map((m,i)=>{const mo=list.filter(o=>o.member===m);const total=mo.length,completed=mo.filter(o=>o.status==='Completed').length,pct=total?Math.round(completed/total*100):0;const cols=['gold','blue','green'];return`<div class="kpi-card ${cols[i]}"><div class="kpi-label">${m}</div><div class="kpi-value">${total}</div><div class="kpi-sub">${pct}% complete · ${total-completed} pending</div></div>`;}).join('');renderTeamTable('team-table',list,true);}
+function renderBadges(){document.getElementById('badge-orders').textContent=orders.length;document.getElementById('badge-artworks').textContent=orders.filter(o=>ARTWORK_STATUSES.includes(o.status)||o.type==='Artwork').length;document.getElementById('badge-productions').textContent=orders.filter(o=>PRODUCTION_STATUSES.includes(o.status)||o.type==='Production').length;}
+function renderAll(){renderDashboard();renderOrdersTable();renderArtworksTable();renderProductionsTable();renderTeamPage();renderBadges();}
+
+function genId(){return'o'+Date.now()+Math.random().toString(36).slice(2,6);}
+function openAddModal(){editingId=null;document.getElementById('modal-title').textContent='New Order / Lead';clearForm();document.getElementById('f-date').value=new Date().toISOString().split('T')[0];document.getElementById('order-modal').classList.add('open');}
+function editOrder(id){const o=orders.find(x=>x.id===id);if(!o)return;editingId=id;document.getElementById('modal-title').textContent='Edit Order';document.getElementById('f-date').value=o.date||'';document.getElementById('f-client').value=o.client||'';document.getElementById('f-subject').value=o.subject||'';document.getElementById('f-type').value=o.type||'Order';document.getElementById('f-member').value=o.member||'VJ';document.getElementById('f-status').value=o.status||'Order Confirmed';document.getElementById('f-priority').value=o.priority||'Medium';document.getElementById('f-followup').value=o.followup||'';document.getElementById('f-notes').value=o.notes||'';document.getElementById('order-modal').classList.add('open');}
+function clearForm(){['f-date','f-client','f-subject','f-followup','f-notes'].forEach(id=>document.getElementById(id).value='');document.getElementById('f-type').value='Order';document.getElementById('f-member').value='VJ';document.getElementById('f-status').value='Order Confirmed';document.getElementById('f-priority').value='Medium';}
+function closeModal(){document.getElementById('order-modal').classList.remove('open');}
+function closeModalOnOverlay(e){if(e.target===document.getElementById('order-modal'))closeModal();}
+async function saveOrder(){const client=document.getElementById('f-client').value.trim();if(!client){showToast('Please enter a client name.',true);return;}const data={id:editingId||genId(),date:document.getElementById('f-date').value,client,subject:document.getElementById('f-subject').value,type:document.getElementById('f-type').value,member:document.getElementById('f-member').value,status:document.getElementById('f-status').value,priority:document.getElementById('f-priority').value,followup:document.getElementById('f-followup').value,notes:document.getElementById('f-notes').value.trim(),createdAt:editingId?(orders.find(x=>x.id===editingId)?.createdAt||Date.now()):Date.now(),updatedAt:Date.now(),source:editingId?(orders.find(x=>x.id===editingId)?.source||'manual'):'manual'};if(editingId){const idx=orders.findIndex(x=>x.id===editingId);orders[idx]=data;showToast('Order updated!');}else{orders.unshift(data);showToast('Order added!');}saveLocal();await pushOrdersToCloud();closeModal();renderAll();}
+async function deleteOrder(id){if(!confirm('Delete this order?'))return;orders=orders.filter(o=>o.id!==id);saveLocal();await pushOrdersToCloud();renderAll();showToast('Order deleted.');}
+
+function exportCSV(){const h=['Date','Client','Subject','Type','Assigned To','Status','Priority','Follow-Up','Source','Notes'];const rows=orders.map(o=>[o.date,o.client,o.subject,o.type,o.member,o.status,o.priority,o.followup,o.source||'manual',`"${(o.notes||'').replace(/"/g,'""')}"`].join(','));const csv=[h.join(','),...rows].join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=`fhw-orders-${new Date().toISOString().split('T')[0]}.csv`;a.click();showToast('CSV exported!');}
+
+let toastTimer;
+function showToast(msg,isError=false,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(isError?' error':type?' '+type:'');void t.offsetWidth;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),3000);}
+
+loadLocal();updateSyncPill();renderAll();
+if(settings.jsonbinKey&&settings.jsonbinBin){syncNow();startSyncTimer();}
+</script>
+</body>
+</html>
